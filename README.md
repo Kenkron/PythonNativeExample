@@ -11,9 +11,8 @@ Dependencies
 ------------
 
 * pyglet (for rendering)
-* numpy (for parsing the c function output)
 
-`python -m pip install pyglet numpy`
+`python -m pip install pyglet`
 
 Building the DLL
 ----------------

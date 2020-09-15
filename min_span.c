@@ -65,3 +65,9 @@ int* min_span(int n_points, int *pointvals) {
     free(groups);
     return edges;
 }
+
+__declspec(dllexport)
+void free_data(int* data)
+{
+    free(data);
+}

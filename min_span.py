@@ -41,10 +41,11 @@ def min_span_py(points):
     return edges
 
 import ctypes
-import numpy
-from numpy.ctypeslib import ndpointer
 min_span_lib = ctypes.CDLL('./min_span.dll')
 min_span_lib.min_span.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_int))
+min_span_lib.min_span.restype = ctypes.POINTER(ctypes.c_int)
+min_span_lib.free_data.argtypes = [ctypes.c_void_p]
+min_span_lib.free_data.restype = None
 
 def min_span_c(points):
     n_points = len(points)
@@ -55,14 +56,14 @@ def min_span_c(points):
 
     array_type = ctypes.c_int * len(pointVals)
 
-    min_span_lib.min_span.restype = ndpointer(dtype=ctypes.c_int, shape=((n_points * 2 - 2),))
-
-    res = min_span_lib.min_span(ctypes.c_int(n_points), array_type(*pointVals))
+    output = min_span_lib.min_span(ctypes.c_int(n_points), array_type(*pointVals))
 
     edges = []
-    for i in range(int(len(res)/2)):
-        edges.append((res[i * 2], res[i * 2 + 1]))
+    for i in range(n_points - 1):
+        edges.append((output[i * 2], output[i * 2 + 1]))
 
+    free_pointer = ctypes.cast(output, ctypes.c_void_p)
+    min_span_lib.free_data(free_pointer)
     return edges
 
 import pyglet
