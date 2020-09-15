@@ -1,4 +1,23 @@
 
+/**
+ * Computes a minimum spanning tree from a given set of 2d points.
+ * Assumes there is an edge between every pair of points.
+ *
+ * @param int n_points The number of points in the minimum spanning tree
+ * @param int* pointvals The coordinates of each point. Each point has
+ * two values (x and y), and they are stored in sequence, such that, for
+ * point i, the x coordinate is at pointvals[i*2] and the y coordinate is
+ * at pointvals[i*2 + 1].
+ * 
+ * @return int* The edges of the minimum spanning tree, as defined by
+ * their starting and ending points. Each edge is defined by two "points".
+ * Thus, for edge i, the first point is located at [i*2],
+ * and the second at [i*2 + 1].
+ *
+ * Each "point" is an integer referring to the pointvalues parameter,
+ * such that, for point p, the x coordinate is at pointvals[i*2] and
+ * the y coordinate is at pointvals[i*2 + 1].
+ */
 __declspec(dllexport)
 int* min_span(int n_points, int *pointvals) {
     if (n_points < 2) {
