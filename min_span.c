@@ -1,5 +1,6 @@
 
-__declspec(dllexport) int* min_span(int n_points, int *pointvals){
+__declspec(dllexport)
+int* min_span(int n_points, int *pointvals) {
     if (n_points < 2) {
         return 0;
     }
