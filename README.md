@@ -7,6 +7,10 @@ The program 'min_span.py' creates a set of 200 random points. When you press ret
 
 The implementations function the same way (inefficiently), but the performance difference is incredible. On my computer, the c implementation takes 0.03 seconds, while the python implementation takes around 5.5 seconds. This demonstrates the drastic performance increase that native implementation provides for expensive functions. However, it should be noted that most python libraries (eg. numpy) use a native backend already. Native code written to replace these functions are unlikely to be any faster than the functions already are.
 
+It's possible that the python implementation could
+be improved, but even if it could, the C
+implementation didn't have to be improved.
+
 Dependencies
 ------------
 
@@ -14,12 +18,21 @@ Dependencies
 
 `python -m pip install pyglet`
 
-Building the DLL
-----------------
+Compiling the C code
+--------------------
+
+### Windows
 
 1. Open a Developer Command Prompt (this comes with Visual Studios)
 2. Navigate to the directory with *min_span.c*
 3. Run `cl /LD min_span.c` to compile the code into *min_span.dll*
+
+### Linux
+
+```
+gcc -c -fPIC -O3 min_span.c -o min_span.o
+gcc min_span.o -shared -o min_span.so
+```
 
 Running the code
 ----------------
