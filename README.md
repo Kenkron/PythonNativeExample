@@ -7,6 +7,13 @@ The program 'min_span.py' creates a set of 200 random points. When you press ret
 
 The implementations function the same way (inefficiently), but the performance difference is incredible. On my computer, the c implementation takes 0.03 seconds, while the python implementation takes around 5.5 seconds. This demonstrates the drastic performance increase that native implementation provides for expensive functions. However, it should be noted that most python libraries (eg. numpy) use a native backend already. Native code written to replace these functions are unlikely to be any faster than the functions already are.
 
+Controls
+--------
+
+* To add points, left click
+* To remove points, right click
+* To change initial points, run with the desired number of points as an argument (eg. `python min-span.py 1000`)
+
 Dependencies
 ------------
 
