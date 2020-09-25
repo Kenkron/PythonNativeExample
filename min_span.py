@@ -41,6 +41,7 @@ def min_span_py(points):
     return edges
 
 import ctypes
+import sys
 min_span_lib = ctypes.CDLL('./min_span.dll')
 min_span_lib.min_span.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_int))
 min_span_lib.min_span.restype = ctypes.POINTER(ctypes.c_int)
@@ -81,14 +82,21 @@ label = pyglet.text.Label("",
 points = []
 edges = []
 BORDER = 4
-for i in range(200):
+POINT_RADIUS = 3
+
+startingPoints = 200
+
+if len(sys.argv) > 1:
+    startingPoints = int(sys.argv[1])
+
+for i in range(startingPoints):
     points.append((random.randrange(BORDER, window.width - BORDER), random.randrange(label.font_size + BORDER, window.height - BORDER)))
 
 @window.event
 def on_draw():
     window.clear()
     for p in points:
-        pyglet.shapes.Circle(p[0], p[1], 2, segments=8).draw()
+        pyglet.shapes.Circle(p[0], p[1], POINT_RADIUS, segments=8).draw()
     for e in edges:
         pyglet.shapes.Line(
             points[e[0]][0], points[e[0]][1],
@@ -114,5 +122,22 @@ def on_key_press(symbol, modifiers):
         edges = min_span_py(points)
     label_text += str(time.time() - start) + " seconds"
     label.text = label_text
+
+@window.event
+def on_mouse_press(x, y, button, modifiers):
+    if button == pyglet.window.mouse.RIGHT:
+        global edges
+        edges = []
+        closest = -1
+        closest_point = None
+        for p in points:
+            dist2 = (p[0] - x) ** 2 + (p[1] - y) ** 2
+            if closest < 0 or dist2 < closest:
+                closest_point = p
+                closest = dist2
+        if closest <= POINT_RADIUS**2:
+            points.remove(closest_point)
+    else:
+        points.append((x, y))
 
 pyglet.app.run()
