@@ -14,6 +14,10 @@ Controls
 * To remove points, right click
 * To change initial points, run with the desired number of points as an argument (eg. `python min-span.py 1000`)
 
+It's possible that the python implementation could
+be improved, but even if it could, the C
+implementation didn't have to be improved.
+
 Dependencies
 ------------
 
@@ -21,12 +25,21 @@ Dependencies
 
 `python -m pip install pyglet`
 
-Building the DLL
-----------------
+Compiling the C code
+--------------------
+
+### Windows
 
 1. Open a Developer Command Prompt (this comes with Visual Studios)
 2. Navigate to the directory with *min_span.c*
 3. Run `cl /LD min_span.c` to compile the code into *min_span.dll*
+
+### Linux
+
+```
+gcc -c -fPIC -O3 min_span.c -o min_span.o
+gcc min_span.o -shared -o min_span.so
+```
 
 Running the code
 ----------------

@@ -1,12 +1,35 @@
-#!python
+#!/usr/bin/env python3
 
-# A test of python native integration.
-# A minimum spanning tree should be an O(n^3) operation, but
-# converting the data to/from a ctype should be O(1)
-# Thus, there should be a performance benefit to running a
-# minimum spanning tree in C.
+"""
+A test of python native integration.
+
+The spanning tree function should be an O(n^3)
+operation, but converting the data to/from a ctype
+should be O(1) Thus, there should be a performance
+benefit to running a minimum spanning tree in C.
+"""
 
 def min_span_py(points):
+    """
+    Python implementation of minimum spanning tree
+
+    Any points already connected together by edges
+    are considered to be in the same "forest". At
+    the start, since no points have been connected
+    yet, each point is in its own "forest".
+
+    The algorithm finds the two closest points in
+    different "forests", connects them with an
+    edge, and combines them into one forest. This
+    is repeated until there is only one forest.
+
+    This is a greedy algorithm. Because it always
+    searches for the shortest useful edge, the end
+    result will use the shortest edges possible.
+
+    This algorithm is designed to mirror the C
+    implementation in min_span.c.
+    """
     edges = []
     edge_color = (255, 0, 0)
     groups = []
@@ -42,13 +65,29 @@ def min_span_py(points):
 
 import ctypes
 import sys
-min_span_lib = ctypes.CDLL('./min_span.dll')
+import platform
+min_span_lib = None
+if platform.system() == "Linux":
+    min_span_lib = ctypes.CDLL('./min_span.so')
+if platform.system() == "Windows":
+    min_span_lib = ctypes.CDLL('./min_span.dll')
 min_span_lib.min_span.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_int))
 min_span_lib.min_span.restype = ctypes.POINTER(ctypes.c_int)
 min_span_lib.free_data.argtypes = [ctypes.c_void_p]
 min_span_lib.free_data.restype = None
 
 def min_span_c(points):
+    """
+    Calls a C implementation of minimum spanning tree
+
+    This implementation is written in min_span.c,
+    compiled to either a .dll (windows) or .so (linux),
+    and called using the ctypes library.
+
+    The c implementation of minimum spanning tree is
+    designed to function the same way as the python
+    implementation.
+    """
     n_points = len(points)
     pointVals = []
     for p in points:
@@ -73,11 +112,12 @@ import time
 
 window = pyglet.window.Window()
 
-label = pyglet.text.Label("",
-                          font_name='Times New Roman',
-                          font_size=16,
-                          x=0, y=0,
-                          anchor_x='left', anchor_y='bottom')
+label = pyglet.text.Label(
+    "Press ENTER for C, or any other key for Python",
+    font_name='Times New Roman',
+    font_size=16,
+    x=0, y=0,
+    anchor_x='left', anchor_y='bottom')
 
 points = []
 edges = []
@@ -105,14 +145,18 @@ def on_draw():
     label.draw()
 
 
-@window.event
-def on_key_press(symbol, modifiers):
+def run_min_span(native):
+    """
+    This is triggered by on_key_press, but separated
+    into its own function so that the 'Computing...'
+    message can be displayed.
+    """
     global edges
     global edge_color
     global label
     label_text = ""
     start = time.time()
-    if symbol is pyglet.window.key.ENTER:
+    if native:
         label_text = "C: "
         edge_color = (0, 0, 255)
         edges = min_span_c(points)
@@ -139,5 +183,17 @@ def on_mouse_press(x, y, button, modifiers):
             points.remove(closest_point)
     else:
         points.append((x, y))
+
+@window.event
+def on_key_press(symbol, modifiers):
+    global label
+    label.text = "Computing..."
+    native = (symbol == pyglet.window.key.ENTER)
+
+    # This makes pyglet call run_min_span after it
+    # updates the label to say "Computing..."
+    def callback(dt):
+        run_min_span(native)
+    pyglet.clock.schedule_once(callback, 0.001)
 
 pyglet.app.run()

@@ -1,3 +1,4 @@
+#include <stdlib.h>
 
 /**
  * Computes a minimum spanning tree from a given set of 2d points.
@@ -18,7 +19,9 @@
  * such that, for point p, the x coordinate is at pointvals[i*2] and
  * the y coordinate is at pointvals[i*2 + 1].
  */
+#ifdef _WIN32
 __declspec(dllexport)
+#endif
 int* min_span(int n_points, int *pointvals) {
     if (n_points < 2) {
         return 0;
@@ -66,7 +69,9 @@ int* min_span(int n_points, int *pointvals) {
     return edges;
 }
 
+#ifdef _WIN32
 __declspec(dllexport)
+#endif
 void free_data(int* data)
 {
     free(data);
