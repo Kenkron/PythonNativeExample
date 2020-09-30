@@ -5,7 +5,7 @@ Demonstration of running C code from Python
 
 The program 'min_span.py' creates a set of 200 random points. When you press return, python will run the minimum spanning tree code written in min_span.c, and compiled into min_span.dll. The tree will appear blue. Alternatively, if any other key is pressed, the minimum spanning tree will be computed in pure python, and the result will appear red. The time taken for each operation will appear red.
 
-The implementations function the same way (inefficiently), but the performance difference is incredible. On my computer, the c implementation takes 0.03 seconds, while the python implementation takes around 5.5 seconds. This demonstrates the drastic performance increase that native implementation provides for expensive functions. However, it should be noted that most python libraries (eg. numpy) use a native backend already. Native code written to replace these functions are unlikely to be any faster than the functions already are.
+The implementations function the same way (inefficiently), but the performance difference is incredible. On my computer, the c implementation takes 0.03 seconds, while the python implementation takes around 5.5 seconds. Pypy takes around 0.06 seconds, which is considerably faster than the default CPython, though this is still around half the speed of the c implementation. These tests demonstrate the drastic performance increase that native implementation provides for expensive functions. However, it should be noted that most python libraries (eg. numpy) use a native backend already. Native code written to replace these functions are unlikely to be any faster than the functions already are.
 
 Controls
 --------
