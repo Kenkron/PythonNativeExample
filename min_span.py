@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 """
 A test of python native integration.
 
@@ -8,6 +7,8 @@ operation, but converting the data to/from a ctype
 should be O(1) Thus, there should be a performance
 benefit to running a minimum spanning tree in C.
 """
+
+import math
 
 def min_span_py(points):
     """
@@ -68,9 +69,9 @@ import sys
 import platform
 min_span_lib = None
 if platform.system() == "Linux":
-    min_span_lib = ctypes.CDLL('./min_span.so')
+    min_span_lib = ctypes.CDLL('./native_min_span.so')
 if platform.system() == "Windows":
-    min_span_lib = ctypes.CDLL('./min_span.dll')
+    min_span_lib = ctypes.CDLL('./native_min_span.dll')
 min_span_lib.min_span.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_int))
 min_span_lib.min_span.restype = ctypes.POINTER(ctypes.c_int)
 min_span_lib.free_data.argtypes = [ctypes.c_void_p]
@@ -106,94 +107,148 @@ def min_span_c(points):
     min_span_lib.free_data(free_pointer)
     return edges
 
-import pyglet
-import random
-import time
+def get_direction(a, b):
+    """
+    Gets a unit vector pointing from b to a
+    """
+    difference = (a[0] - b[0], a[1] - b[1])
+    length = (difference[0]**2 + difference[1]**2)**0.5
+    return (difference[0]/length, difference[1]/length)
 
-window = pyglet.window.Window()
+def dot(a, b):
+    return a[0] * b[0] + a[1] * b[1]
 
-label = pyglet.text.Label(
-    "Press ENTER for C, or any other key for Python",
-    font_name='Times New Roman',
-    font_size=16,
-    x=0, y=0,
-    anchor_x='left', anchor_y='bottom')
+def cross(a, b):
+    return a[0] * b[1] - b[0] * a[1]
 
-points = []
-edges = []
-BORDER = 4
-POINT_RADIUS = 3
+def angle(a, b):
+    """
+    returns the angle between two unit vectors
+    """
+    angle = math.atan2(cross(a, b), dot(a, b)) + math.pi
+    if math.pi * 2 - angle < 0.0000001:
+        return 0
+    return angle
 
-startingPoints = 200
-
-if len(sys.argv) > 1:
-    startingPoints = int(sys.argv[1])
-
-for i in range(startingPoints):
-    points.append((random.randrange(BORDER, window.width - BORDER), random.randrange(label.font_size + BORDER, window.height - BORDER)))
-
-@window.event
-def on_draw():
-    window.clear()
+def remove_duplicates(points):
+    """
+    Returns a new list of points from the input parameter,
+    but without duplicates. The input is not mutated.
+    Order is preserved, with only the first of a duplicate
+    kept.
+    """
+    new_points = []
+    added = set()
     for p in points:
-        pyglet.shapes.Circle(p[0], p[1], POINT_RADIUS, segments=8).draw()
-    for e in edges:
-        pyglet.shapes.Line(
-            points[e[0]][0], points[e[0]][1],
-            points[e[1]][0], points[e[1]][1],
-            width=2, color=edge_color).draw()
-    label.draw()
+        if p not in added:
+            added.add(p)
+            new_points.append(p)
+    return new_points
 
-
-def run_min_span(native):
+def travelling_salesman_from_edges(points, min_span_edges):
     """
-    This is triggered by on_key_press, but separated
-    into its own function so that the 'Computing...'
-    message can be displayed.
+    Provides an approximation of the travelling salesman problem
+    based on the minimum spanning tree. This is guaranteed to be
+    no more than twice the length of the actual solution.
     """
-    global edges
-    global edge_color
-    global label
-    label_text = ""
-    start = time.time()
-    if native:
-        label_text = "C: "
-        edge_color = (0, 0, 255)
-        edges = min_span_c(points)
-    else:
-        label_text = "Python: "
-        edge_color = (255, 0, 0)
-        edges = min_span_py(points)
-    label_text += str(time.time() - start) + " seconds"
-    label.text = label_text
+    # graph maps points to a list of adjacent points
+    graph = {}
+    for e in min_span_edges:
+        if e[0] not in graph:
+            graph[e[0]] = []
+        graph[e[0]].append(e[1])
+        if e[1] not in graph:
+            graph[e[1]] = []
+        graph[e[1]].append(e[0])
 
-@window.event
-def on_mouse_press(x, y, button, modifiers):
-    if button == pyglet.window.mouse.RIGHT:
-        global edges
-        edges = []
-        closest = -1
-        closest_point = None
-        for p in points:
-            dist2 = (p[0] - x) ** 2 + (p[1] - y) ** 2
-            if closest < 0 or dist2 < closest:
-                closest_point = p
-                closest = dist2
-        if closest <= POINT_RADIUS**2:
-            points.remove(closest_point)
-    else:
-        points.append((x, y))
+    # Start with a single segment of the tree
+    start = 0
+    while len(graph[start]) > 1:
+        start += 1;
+    
+    path = [start]
+    # Set will have fast lookups
+    added = {points[start]}
+    # Start walking at any adjacent point
+    previous = start
+    walker = graph[previous][0]
+    # The walker will always follow the left-most path
+    while len(path) < len(points):
+        backwards = get_direction(points[walker], points[previous])
+        next_step = graph[walker][0]
+        for adjacent in graph[walker]:
+            forwards = get_direction(points[adjacent], points[walker])
+            to_next_step = get_direction(points[next_step], points[walker])
+            
+            if angle(backwards, forwards) > angle(backwards, to_next_step):
+                next_step = adjacent
+        if points[walker] not in added:
+            path.append(walker)
+            added.add(points[walker])
+        previous = walker
+        walker = next_step
+    
+    path_points = [points[p] for p in path]
+    clean_path(path_points)
+    return path_points
 
-@window.event
-def on_key_press(symbol, modifiers):
-    global label
-    label.text = "Computing..."
-    native = (symbol == pyglet.window.key.ENTER)
+def segments_intersect(a, b, c, d):
+    """
+    Returns True iff line segments ab and cd intersect
+    """
+    p = a
+    r = (b[0] - a[0], b[1] - a[1])
+    q = c
+    s = (d[0] - c[0], d[1] - c[1])
+    q_p = (q[0] - p[0], q[1] - p[1])
+    rxs = cross(r, s)
+    if rxs == 0:
+        if cross(q_p, r) == 0:
+            # Points are colinear. Do a bb check
+            return (
+                min(a[0], b[0]) <= max(c[0], d[0]) and
+                min(c[0], d[0]) <= max(a[0], b[0]) and
+                min(a[1], b[1]) <= max(c[1], d[1]) and
+                min(c[1], d[1]) <= max(a[1], b[1]))
+        else:
+            # Points are parallel
+            return False
+    t = cross(q_p, s) / rxs
+    u = cross(q_p, r) / rxs
+    return (
+        0 <= t and
+        t <= 1 and
+        0 <= u and
+        u <= 1)
 
-    # This makes pyglet call run_min_span after it
-    # updates the label to say "Computing..."
-    def callback(dt):
-        run_min_span(native)
-    pyglet.clock.schedule_once(callback, 0.001)
+def clean_path(points):
+    """
+    Removes crossing segments of a path.
+    This mutates the input, and also returns it
+    for chaining.
 
-pyglet.app.run()
+    It works by switching the second point of the 
+    first segment with the first point of the second
+    segment, repeating until there are no more overlaps.
+
+    If the path cannot be cleaned in len(points) iterations,
+    processing is halted.
+    """
+    cleared = False
+    i = 0
+    while not cleared and i < len(points):
+        i += 1
+        cleared = True
+        for i in range(1, len(points)):
+            for j in range(i + 2, len(points)):
+                a = points[i]
+                b = points[(i + 1) % len(points)]
+                c = points[j]
+                d = points[(j + 1) % len(points)]
+                if segments_intersect(a, b, c, d):
+                    print(a, b, c, d)
+                    tmp = points[i]
+                    points[(i + 1) % len(points)] = c
+                    points[j] = b
+                    cleared = False
+    return points
