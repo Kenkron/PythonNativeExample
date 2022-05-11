@@ -1,5 +1,4 @@
 import sys
-print(sys.path)
 import min_span
 import pyglet
 import random
@@ -71,7 +70,6 @@ def run_min_span(native):
         edges = min_span.min_span_py(points)
     label_text += str(time.time() - start) + " seconds"
     label.text = label_text
-    salesman_path = min_span.travelling_salesman_from_edges(points, edges)
 
 @window.event
 def on_mouse_press(x, y, button, modifiers):
@@ -94,6 +92,9 @@ def on_mouse_press(x, y, button, modifiers):
 def on_key_press(symbol, modifiers):
     global label
     global salesman_path
+    if symbol == pyglet.window.key.T:
+        salesman_path = min_span.travelling_salesman_from_edges(points, edges)
+        return
     label.text = "Computing..."
     native = (symbol == pyglet.window.key.ENTER)
 

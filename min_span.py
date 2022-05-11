@@ -246,7 +246,6 @@ def clean_path(points):
                 c = points[j]
                 d = points[(j + 1) % len(points)]
                 if segments_intersect(a, b, c, d):
-                    print(a, b, c, d)
                     tmp = points[i]
                     points[(i + 1) % len(points)] = c
                     points[j] = b
