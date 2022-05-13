@@ -31,14 +31,14 @@ Compiling the C code
 ### Windows
 
 1. Open a Developer Command Prompt (this comes with Visual Studios)
-2. Navigate to the directory with *min_span.c*
-3. Run `cl /LD min_span.c` to compile the code into *min_span.dll*
+2. Navigate to the directory with *native_min_span.c*
+3. Run `cl /LD native_min_span.c` to compile the code into *native_min_span.dll*
 
 ### Linux
 
 ```
-gcc -c -fPIC -O3 min_span.c -o min_span.o
-gcc min_span.o -shared -o min_span.so
+gcc -c -fPIC -O3 native_min_span.c -o native_min_span.o
+gcc native_min_span.o -shared -o native_min_span.so
 ```
 
 Running the code
