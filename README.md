@@ -44,4 +44,4 @@ gcc min_span.o -shared -o min_span.so
 Running the code
 ----------------
 
-`python min_span.py`
+`python visualization.py`
