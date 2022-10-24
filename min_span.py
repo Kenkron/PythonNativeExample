@@ -64,6 +64,67 @@ def min_span_py(points):
                 groups[i] = groupi
     return edges
 
+def min_span_numpy(points):
+    """
+    Python implementation of minimum spanning tree
+
+    Any points already connected together by edges
+    are considered to be in the same "forest". At
+    the start, since no points have been connected
+    yet, each point is in its own "forest".
+
+    The algorithm finds the two closest points in
+    different "forests", connects them with an
+    edge, and combines them into one forest. This
+    is repeated until there is only one forest.
+
+    This is a greedy algorithm. Because it always
+    searches for the shortest useful edge, the end
+    result will use the shortest edges possible.
+
+    This algorithm is designed to mirror the C
+    implementation in min_span.c.
+    """
+    import numpy as np
+    edges = []
+    edge_color = (255, 0, 0)
+    groups = []
+
+    for i in range(len(points)):
+        groups.append(i)
+
+    pts = np.array(points)
+
+    dist2map = []
+    for p in pts:
+        dist_m = pts-p
+        dist2map.append(np.sum(dist_m * dist_m, 1))
+
+    # There should be len(points) - 1 edges in a min spanning tree
+    # If len(points) < 2, there cannot be any edges
+    if len(points) < 2:
+        return edges
+
+    for e in range(len(points) - 1):
+        min_edge_2 = -1
+        min_edge_i = 0
+        min_edge_j = 0
+        for i in range(len(points)):
+            for j in range(i, len(points)):
+                # a^2 + b^2 = c^2
+                if groups[i] != groups[j]:
+                    if (min_edge_2 == -1 or dist2map[i][j] < min_edge_2):
+                        min_edge_2 = dist2map[i][j]
+                        min_edge_i = i
+                        min_edge_j = j
+        edges.append((min_edge_i, min_edge_j))
+        groupi = groups[min_edge_i]
+        groupj = groups[min_edge_j]
+        for i in range(len(groups)):
+            if groups[i] == groupj:
+                groups[i] = groupi
+    return edges
+
 import ctypes
 import sys
 import platform
@@ -257,13 +318,24 @@ if __name__ == "__main__":
     import random
     import time
     startingPoints = 300
+    functions = {
+        "c": min_span_c,
+        "python": min_span_py,
+        "numpy": min_span_numpy
+    }
+    func_name = "python"
+    function = functions[func_name]
     if len(sys.argv) > 1:
-        startingPoints = int(sys.argv[1])
+        if sys.argv[1] in functions:
+            func_name = sys.argv[1]
+            function = functions[func_name]
+    if len(sys.argv) > 2:
+        startingPoints = int(sys.argv[2])
 
     points = []
     for i in range(startingPoints):
         points.append((random.randrange(0, 1000), random.randrange(0, 1000)))
     
     start = time.time()
-    min_span_py(points)
-    print("Time:" + str(time.time() - start) + " seconds")
+    function(points)
+    print(func_name + ": " + str(time.time() - start) + " seconds")
