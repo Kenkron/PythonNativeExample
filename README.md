@@ -34,6 +34,8 @@ Compiling the C code
 2. Navigate to the directory with *native_min_span.c*
 3. Run `cl /LD native_min_span.c` to compile the code into *native_min_span.dll*
 
+*Note: The architecture of the dll must match the python architecture (x86/x64)*
+
 ### Linux
 
 ```

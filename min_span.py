@@ -251,3 +251,19 @@ def clean_path(points):
                     points[j] = b
                     cleared = False
     return points
+
+if __name__ == "__main__":
+    import sys
+    import random
+    import time
+    startingPoints = 300
+    if len(sys.argv) > 1:
+        startingPoints = int(sys.argv[1])
+
+    points = []
+    for i in range(startingPoints):
+        points.append((random.randrange(0, 1000), random.randrange(0, 1000)))
+    
+    start = time.time()
+    min_span_py(points)
+    print("Time:" + str(time.time() - start) + " seconds")
